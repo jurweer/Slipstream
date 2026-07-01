@@ -94,12 +94,16 @@ const dbSetMeta = (k, v) => tx('meta', 'readwrite', (s) => s.put({ k, ...v }));
 const dbGetMeta = (k) => tx('meta', 'readonly', (s) => s.get(k));
 const dbClearMeta = () => tx('meta', 'readwrite', (s) => s.clear());
 
+const persistOn = () => window.SlipFeatures.isEnabled('ride_persistence');
+
 function savePlayhead() {
+  if (!persistOn()) return;
   dbSetMeta('playhead', { current: state.current, pos: els.audio.currentTime || 0 }).catch(() => {});
 }
 // Track order lives in its own meta record so reordering never rewrites (and risks
 // clobbering) the stored audio blobs.
 function saveOrder() {
+  if (!persistOn()) return;
   dbSetMeta('order', { ids: state.queue.map((i) => i.id) }).catch(() => {});
 }
 
@@ -116,7 +120,7 @@ function applyRideActiveUI() {
 
 function startRide() {
   applyRideActiveUI();
-  dbSetMeta('ride', { active: true }).catch(() => {});
+  if (persistOn()) dbSetMeta('ride', { active: true }).catch(() => {});
   log('ride started');
 }
 
@@ -165,8 +169,8 @@ async function addFiles(files) {
   const added = Array.from(files).filter((f) => f && f.type.startsWith('audio/'));
   for (const f of added) {
     const id = state.nextId++;
-    // Persist the blob first, then reference it in-memory via an object URL.
-    await dbPutTrack({ id, name: f.name, size: f.size, owned: true, blob: f }).catch((e) => log(`store failed: ${e}`));
+    // Persist the blob (when ride_persistence is on) then reference it via an object URL.
+    if (persistOn()) await dbPutTrack({ id, name: f.name, size: f.size, owned: true, blob: f }).catch((e) => log(`store failed: ${e}`));
     state.queue.push({ id, name: f.name, size: f.size, url: URL.createObjectURL(f), owned: true });
   }
   if (added.length) { saveOrder(); log(`added ${added.length} owned song(s) — queue now ${state.queue.length}`); }
@@ -342,6 +346,7 @@ function wireTheme() {
 // --- Restore on load (the persistence feature) -------------------------------
 
 async function restore() {
+  if (!persistOn()) return;
   let ride;
   try { ride = await dbGetMeta('ride'); } catch { return; }
   if (!ride || !ride.active) return;
@@ -366,6 +371,43 @@ async function restore() {
   loadIndex(idx, false); // cue, paused — autoplay needs a user gesture
   updateControls();
   log(`restored ride: ${state.queue.length} track(s) from storage (reload-safe)`);
+}
+
+// --- Feature gates (flags controlled server-side) ----------------------------
+
+function applyFeatureGates() {
+  const diag = document.getElementById('diagnostics-card');
+  if (diag) diag.style.display = window.SlipFeatures.isEnabled('diagnostics') ? '' : 'none';
+  renderSources();
+}
+
+const SOURCE_FLAGS = [
+  { key: 'spotify_connect', name: '★ Connect Spotify' },
+  { key: 'catalog_jamendo', name: 'Jamendo (Creative Commons)' },
+  { key: 'catalog_internet_archive', name: 'Internet Archive' },
+  { key: 'rooms', name: 'Group ride (rooms)' },
+  { key: 'group_telemetry', name: 'Group telemetry' },
+  { key: 'hotspot_mode', name: 'Hotspot mode' },
+];
+
+// A flag turning on reveals its (not-yet-built) entry point — the gate is server-driven.
+function renderSources() {
+  const card = document.getElementById('sources-card');
+  const list = document.getElementById('sources-list');
+  if (!card || !list) return;
+  const enabled = SOURCE_FLAGS.filter((s) => window.SlipFeatures.isEnabled(s.key));
+  list.innerHTML = '';
+  for (const s of enabled) {
+    const row = document.createElement('div');
+    row.className = 'src-stub';
+    const name = document.createElement('span');
+    name.className = 'sname'; name.textContent = s.name;
+    const soon = document.createElement('span');
+    soon.className = 'soon'; soon.textContent = 'enabled · not built yet';
+    row.append(name, soon);
+    list.appendChild(row);
+  }
+  card.style.display = enabled.length ? '' : 'none';
 }
 
 // --- Boot --------------------------------------------------------------------
@@ -393,5 +435,10 @@ registerSW();
 renderQueue();
 updateControls();
 refreshAddability();
-restore().catch((e) => log(`restore failed: ${e}`));
-log('player ready — start a ride, confirm ownership, add songs (queue survives reload)');
+
+// Flags are controlled server-side — fetch them, then gate the UI and restore any ride.
+window.SlipFeatures.ready.then(() => {
+  applyFeatureGates();
+  restore().catch((e) => log(`restore failed: ${e}`));
+  log(`player ready — flags from ${window.SlipFeatures.source()}`);
+});

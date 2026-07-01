@@ -1,0 +1,13 @@
+{
+  "flags": {
+    "ride_persistence": true,
+    "diagnostics": true,
+    "rooms": false,
+    "catalog_jamendo": false,
+    "catalog_internet_archive": false,
+    "spotify_connect": false,
+    "group_telemetry": false,
+    "hotspot_mode": false
+  },
+  "updatedAt": null
+}

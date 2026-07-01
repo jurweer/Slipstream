@@ -43,6 +43,10 @@ Model: **prefetch files + shared-clock sync + local playback** (NOT live audio s
 
 - [ ] **Spike:** prove leader audio survives a backgrounded / locked screen on real phones
       (`spike-audio/`). ← start here; de-risks everything.
+- [x] **Server-side feature flags** (`flags/`) — operator flips features; the client fetches
+      `/flags` at boot and gates the UI/logic (no in-app toggling). Runtime admin via
+      `POST /flags` (Bearer token); dev HTTPS server serves `/flags` same-origin. See
+      [`flags/README.md`](flags/README.md).
 - [x] Signaling server + room join — dependency-free SSE+POST relay (`signaling/`); join,
       peer discovery, and WebRTC-offer relay verified end-to-end.
 - [ ] Browser `room.js` client: wrap join + `RTCPeerConnection` handshake in the PWA.

@@ -139,6 +139,11 @@
     border-radius:10px; padding:10px; height:30vh; overflow-y:auto; margin-top:12px; color:var(--mist-dim); }
   .hint { color:var(--mist-faint); font-size:.82rem; margin-top:12px; }
 
+  /* feature-gated source placeholders (flags controlled server-side) */
+  .src-stub { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px; border:1px solid var(--edge); border-radius:10px; margin-bottom:8px; }
+  .src-stub .sname { font-weight:600; font-size:.92rem; }
+  .src-stub .soon { font-family:'Space Mono'; font-size:10px; color:var(--mist-faint); }
+
   @media(prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
 </style>
 </head>
@@ -212,8 +217,14 @@
   <p class="empty" id="empty">Queue is empty.</p>
 </div>
 
+<!-- SOURCES (feature-gated placeholders) -->
+<div class="card" id="sources-card" style="display:none">
+  <span class="eyebrow">Add music · gated by feature flags</span>
+  <div id="sources-list"></div>
+</div>
+
 <!-- DIAGNOSTICS -->
-<div class="card">
+<div class="card" id="diagnostics-card">
   <details>
     <summary>Spike diagnostics — background-audio evidence</summary>
     <div style="margin-top:14px">
@@ -231,6 +242,7 @@
 </div>
 
 <audio id="audio" preload="auto"></audio>
+<script src="features.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

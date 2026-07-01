@@ -36,9 +36,20 @@ const [key, cert] = await Promise.all([
   process.exit(1);
 });
 
-createServer({ key, cert }, (req, res) => {
+// Serve the server-side feature flags same-origin so the HTTPS app can fetch them without
+// CORS / mixed-content. Reads the flags service's source of truth (flags/flags.json).
+const FLAGS_FILE = join(__dirname, '..', '..', 'flags', 'flags.json');
+
+createServer({ key, cert }, async (req, res) => {
+  const pathname = new URL(req.url, 'https://x').pathname;
+  if (pathname === '/flags') {
+    res.setHeader('access-control-allow-origin', '*');
+    res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
+    res.end(await readFile(FLAGS_FILE).catch(() => '{"flags":{}}'));
+    return;
+  }
   // Resolve request path safely inside ROOT.
-  let rel = decodeURIComponent(new URL(req.url, 'https://x').pathname);
+  let rel = decodeURIComponent(pathname);
   if (rel === '/') rel = '/index.html';
   const filePath = normalize(join(ROOT, rel));
   if (!filePath.startsWith(ROOT) || !existsSync(filePath)) {
