@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#14161b" />
+<title>Slipstream · player</title>
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<script>
+  // set theme before paint to avoid flash
+  try {
+    var t = localStorage.getItem('slip-theme');
+    if (!t && window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) t = 'light';
+    document.documentElement.setAttribute('data-theme', t || 'dark');
+  } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --asphalt:#14161b; --asphalt-2:#1b1e25; --slate:#2b303a; --slate-2:#3a414d;
+    --mist:#eceef2; --mist-dim:#9aa2b1; --mist-faint:#6b7382;
+    --sodium:#ff7a45; --sodium-soft:rgba(255,122,69,.13);
+    --signal:#48d6c4; --signal-soft:rgba(72,214,196,.11);
+    --edge:rgba(255,255,255,.07); --header-bg:rgba(20,22,27,.72);
+    --btn-ink:#1a0d06;
+  }
+  [data-theme="light"] {
+    --asphalt:#f5f6f8; --asphalt-2:#ffffff; --slate:#e4e7ec; --slate-2:#c7ccd5;
+    --mist:#181b20; --mist-dim:#525a67; --mist-faint:#858d9b;
+    --sodium:#d9531f; --sodium-soft:rgba(217,83,31,.10);
+    --signal:#0b9c8c; --signal-soft:rgba(11,156,140,.10);
+    --edge:rgba(20,24,31,.11); --header-bg:rgba(245,246,248,.82);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    background:var(--asphalt); color:var(--mist);
+    font-family:'Inter',system-ui,sans-serif; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 16px);
+    max-width:640px; margin:0 auto;
+    transition:background .25s ease,color .25s ease;
+  }
+  .mono { font-family:'Space Mono',monospace; }
+  h1,h2,h3 { font-family:'Bricolage Grotesque',sans-serif; letter-spacing:-.02em; line-height:1.05; }
+
+  /* header */
+  header { position:sticky; top:0; z-index:50; backdrop-filter:blur(12px);
+    background:var(--header-bg); border-bottom:1px solid var(--edge);
+    margin:0 -16px 18px; padding:0 16px; }
+  .bar { display:flex; align-items:center; justify-content:space-between; height:60px; }
+  .brand { display:flex; align-items:center; gap:10px; font-family:'Bricolage Grotesque';
+    font-weight:800; font-size:1.1rem; }
+  .ride-pill { display:inline-flex; align-items:center; gap:8px; font-family:'Space Mono';
+    font-size:11px; letter-spacing:.05em; color:var(--mist-dim);
+    border:1px solid var(--edge); border-radius:100px; padding:5px 11px; }
+  .dot { width:7px; height:7px; border-radius:50%; background:var(--slate-2); flex-shrink:0; }
+  .dot.on { background:var(--signal); animation:pulse 2.4s infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 var(--signal-soft)} 70%{box-shadow:0 0 0 7px transparent} 100%{box-shadow:0 0 0 0 transparent} }
+  .right { display:flex; align-items:center; gap:10px; }
+  .theme-toggle { display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:34px; border-radius:9px; border:1px solid var(--edge);
+    background:transparent; color:var(--mist-dim); cursor:pointer; }
+  .theme-toggle .ico-sun{display:none} .theme-toggle .ico-moon{display:block}
+  [data-theme="light"] .theme-toggle .ico-sun{display:block}
+  [data-theme="light"] .theme-toggle .ico-moon{display:none}
+
+  /* ephemeral banner */
+  .ephemeral { font-family:'Space Mono'; font-size:11px; color:var(--mist-faint);
+    border:1px dashed var(--edge); border-radius:10px; padding:9px 12px; margin-bottom:14px;
+    display:flex; gap:8px; align-items:flex-start; }
+  .ephemeral b { color:var(--signal); font-weight:700; }
+
+  .card { background:var(--asphalt-2); border:1px solid var(--edge); border-radius:16px;
+    padding:16px; margin-bottom:14px; }
+  .card > .eyebrow { font-family:'Space Mono'; font-size:11px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--mist-faint); display:block; margin-bottom:12px; }
+
+  button { font-family:'Inter'; font-weight:600; font-size:1rem; cursor:pointer;
+    border-radius:10px; min-height:48px; padding:0 18px; border:1px solid var(--slate-2);
+    background:transparent; color:var(--mist); transition:transform .12s,background .2s,border-color .2s,opacity .2s; }
+  button:active { transform:scale(.98); }
+  button:disabled { opacity:.38; cursor:not-allowed; }
+  button.primary { background:var(--sodium); border-color:var(--sodium); color:var(--btn-ink); }
+  button.signal { background:var(--signal); border-color:var(--signal); color:var(--btn-ink); }
+  button.danger { border-color:var(--sodium); color:var(--sodium); }
+  .row { display:flex; gap:10px; }
+  .row > * { flex:1; }
+  :focus-visible { outline:2px solid var(--signal); outline-offset:3px; }
+
+  /* ownership gate */
+  .own { display:flex; gap:11px; align-items:flex-start; padding:12px; border-radius:10px;
+    background:var(--asphalt); border:1px solid var(--edge); margin-bottom:12px; cursor:pointer; }
+  .own input { width:22px; height:22px; margin-top:1px; accent-color:var(--signal); flex-shrink:0; }
+  .own .t { font-size:.9rem; color:var(--mist-dim); }
+  .own .t b { color:var(--mist); font-weight:600; }
+  label.file { display:none; }
+
+  /* now playing */
+  .np { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+  .np .art { width:52px; height:52px; border-radius:11px; flex-shrink:0;
+    background:var(--sodium-soft); border:1px solid var(--edge); display:flex;
+    align-items:center; justify-content:center; color:var(--sodium); }
+  .np .meta { min-width:0; }
+  .np .title { font-family:'Bricolage Grotesque'; font-weight:700; font-size:1.05rem;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .np .sub { font-family:'Space Mono'; font-size:12px; color:var(--mist-dim); }
+  .transport button { min-width:52px; padding:0; }
+
+  /* queue */
+  ol.queue { list-style:none; margin-top:12px; }
+  ol.queue li { display:flex; align-items:center; gap:11px; padding:11px;
+    border:1px solid var(--edge); border-radius:11px; margin-bottom:8px; background:var(--asphalt); }
+  ol.queue li.current { border-color:var(--sodium); background:var(--sodium-soft); }
+  ol.queue li .idx { font-family:'Space Mono'; font-size:12px; color:var(--mist-faint);
+    min-width:20px; text-align:center; }
+  ol.queue li .name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; font-size:.94rem; }
+  ol.queue li .own-tag { font-family:'Space Mono'; font-size:10px; color:var(--signal);
+    border:1px solid var(--signal-soft); background:var(--signal-soft); border-radius:5px; padding:2px 6px; }
+  ol.queue li button { min-height:34px; min-width:34px; padding:0; font-size:.9rem;
+    border-color:var(--edge); color:var(--mist-dim); }
+  .empty { color:var(--mist-faint); font-size:.9rem; font-family:'Space Mono'; margin-top:10px; }
+
+  /* diagnostics */
+  details summary { font-family:'Space Mono'; font-size:12px; color:var(--mist-dim);
+    cursor:pointer; letter-spacing:.05em; }
+  .stat { display:flex; justify-content:space-between; font-size:.88rem; padding:4px 0; }
+  .stat b { color:var(--mist-faint); font-weight:500; }
+  .pill { font-family:'Space Mono'; padding:2px 9px; border-radius:99px; font-size:.72rem; font-weight:700; }
+  .ok { background:var(--signal-soft); color:var(--signal); }
+  .warn { background:var(--sodium-soft); color:var(--sodium); }
+  #log { font-family:'Space Mono'; font-size:11.5px; line-height:1.5; white-space:pre-wrap;
+    word-break:break-word; background:var(--asphalt); border:1px solid var(--edge);
+    border-radius:10px; padding:10px; height:30vh; overflow-y:auto; margin-top:12px; color:var(--mist-dim); }
+  .hint { color:var(--mist-faint); font-size:.82rem; margin-top:12px; }
+
+  @media(prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M2 8h13a4 4 0 1 1-2.8 6.8" stroke="#ff7a45" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M2 13h9" stroke="#48d6c4" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M2 18h5" stroke="#48d6c4" stroke-width="2.2" stroke-linecap="round" opacity=".6"/>
+      </svg>
+      Slipstream
+    </div>
+    <div class="right">
+      <span class="ride-pill"><span class="dot" id="ride-dot"></span><span id="ride-label">NO RIDE</span></span>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+        <svg class="ico-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="ico-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="ephemeral">
+  <span>⟳</span>
+  <span>Tracks live in <b>memory only</b> — never written to disk, evicted after play, and
+  <b>wiped when the ride ends</b> or the app closes. Reload = gone.</span>
+</div>
+
+<!-- RIDE + LIBRARY -->
+<div class="card">
+  <span class="eyebrow">Your library → the ride</span>
+
+  <label class="own" for="own-check">
+    <input type="checkbox" id="own-check" />
+    <span class="t"><b>I own — or have the right to play — every file I add.</b>
+    Slipstream only shares music you legitimately hold; it never fetches tracks from the internet.</span>
+  </label>
+
+  <div class="row" style="margin-bottom:10px">
+    <button class="signal" id="ride-btn">Start ride</button>
+    <button class="danger" id="end-btn" disabled>End &amp; wipe</button>
+  </div>
+
+  <button class="primary" id="add-btn" disabled style="width:100%">＋ Add songs</button>
+  <label class="file"><input id="file" type="file" accept="audio/*" multiple /></label>
+  <p class="hint" id="add-hint">Start a ride and confirm ownership to add songs.</p>
+</div>
+
+<!-- NOW PLAYING -->
+<div class="card">
+  <span class="eyebrow">Now playing</span>
+  <div class="np">
+    <div class="art">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    </div>
+    <div class="meta">
+      <div class="title" id="np-title">Nothing playing</div>
+      <div class="sub" id="np-sub">add songs to start a queue</div>
+    </div>
+  </div>
+  <div class="row transport">
+    <button id="prev" disabled>⏮</button>
+    <button class="primary" id="play" disabled>▶︎</button>
+    <button id="pause" disabled>❚❚</button>
+    <button id="next" disabled>⏭</button>
+  </div>
+  <ol class="queue" id="queue"></ol>
+  <p class="empty" id="empty">Queue is empty.</p>
+</div>
+
+<!-- DIAGNOSTICS -->
+<div class="card">
+  <details>
+    <summary>Spike diagnostics — background-audio evidence</summary>
+    <div style="margin-top:14px">
+      <div class="stat"><b>Playback</b><span id="s-state">idle</span></div>
+      <div class="stat"><b>Position</b><span id="s-pos">0:00</span></div>
+      <div class="stat"><b>Tab visibility</b><span id="s-vis" class="pill ok">visible</span></div>
+      <div class="stat"><b>MediaSession</b><span id="s-ms" class="pill warn">n/a</span></div>
+      <div class="stat"><b>Installed (PWA)</b><span id="s-pwa" class="pill warn">no</span></div>
+      <div class="row" style="margin-top:12px"><button id="clear">Clear log</button></div>
+      <pre id="log"></pre>
+      <p class="hint">Play, then lock the screen / switch apps for ~30s. If <span class="mono">tick @ …
+        (hidden=true)</span> keeps logging and audio never pauses, the PWA plan holds.</p>
+    </div>
+  </details>
+</div>
+
+<audio id="audio" preload="auto"></audio>
+<script src="app.js"></script>
+</body>
+</html>
