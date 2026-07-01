@@ -28,6 +28,13 @@ not make a pirate download lawful (CJEU *ACI Adam*).
 
 ## 2. Delivery modes
 
+> **Headline experience — Connect Spotify.** Riders add music the way they already do: connect
+> their own Spotify and browse/search their library. Delivery then adapts per rider — Premium
+> riders hear it on **their own account** (Mode C), everyone else gets a free legal copy
+> (Mode B) or plays a file they own (Mode A). Owned files + free catalogs are the
+> **no-subscription base** that always works; **Spotify connect is the promoted front door**.
+> "No *shared* subscription" still holds: each rider uses their own account, never a shared login.
+
 How a track actually reaches each rider depends on its provenance:
 
 ### Mode A — Local-copy sharing (peer bytes)
@@ -75,7 +82,11 @@ TrackRef {
 }
 ```
 
-Per-rider resolution order: **own → catalog (B) → premium (C) → skip.**
+Resolution is **per track, ordered by how it was added**:
+- **Added via Spotify (headline path):** premium (C, if the rider has Premium) → catalog (B)
+  legal alternate → skip for that rider.
+- **Added as an owned file:** own (A).
+- **Added from a free catalog:** catalog (B).
 
 ---
 
@@ -88,7 +99,7 @@ Per-rider resolution order: **own → catalog (B) → premium (C) → skip.**
 | Rider's own / group owned files | **A** | owner-supplied | local file → WebRTC bytes | ✅ built |
 | **Jamendo** | **B** | CC (BY / BY-SA / BY-NC …), per-track | API v3.0 `/tracks` → `audiodownload` + `license_ccurl`; `client_id` required | ✅ build 1st |
 | **Internet Archive** | **B** | CC + public domain | `archive.org/metadata/{id}`, advancedsearch; direct `download/{id}/{file}` | ✅ build |
-| **Spotify** (connect) | **C** | commercial (own account) | OAuth connect; metadata sync; **Premium** to play | ✅ build |
+| **★ Spotify** (connect) | **C** | commercial (own account) | OAuth connect; metadata sync; **Premium** to play | ✅ **headline** |
 | **MusicBrainz** | resolver | CC0 data (no audio) | `/ws/2` search by artist+title / ISRC → MBID | ✅ glue for C |
 
 ### Later candidates (verify API status first)

@@ -48,10 +48,16 @@ Model: **prefetch files + shared-clock sync + local playback** (NOT live audio s
 - [ ] Shared-clock sync + local player.
 - [ ] Reconnect / snap-to-leader logic.
 - [ ] Collaborative queue — **riders contribute their own owned files** (the killer feature).
-- [ ] Legal sources + delivery modes (see [`docs/legal-sources.md`](docs/legal-sources.md)):
-      Mode A owned-file peer bytes (built) · Mode B link-and-fetch from licensed catalogs
-      (**Jamendo**, **Internet Archive**) · Mode C per-rider **Spotify Premium** metadata sync
-      (connect flow). Queue items are references; each rider resolves own → catalog → premium.
+- [ ] **Connect Spotify (headline)** + legal delivery modes (see [`docs/legal-sources.md`](docs/legal-sources.md)):
+      add music from your own Spotify library; each rider hears it via **Mode C** (their own
+      Premium) · **Mode B** free catalogs (**Jamendo**, **Internet Archive**) · **Mode A** owned
+      files. Queue items are references; Spotify-added tracks resolve premium → catalog → skip.
+- [ ] **Group telemetry in ride mode (later, parked)** — share live sensor data across the
+      group in ride mode: power, cadence, heart rate (with room for other sport modes). Reads
+      standard BLE sensors (Heart Rate / Cycling Power / Speed-Cadence) via Web Bluetooth —
+      Android-capable, but **iOS Safari has no Web Bluetooth**, so likely needs the native shim
+      (same constraint as hotspot BLE). Broadcasts over the existing ride channel alongside the
+      audio clock.
 - [ ] Hotspot-share mode + Wi-Fi-join QR.
 - [ ] Native shim for true offline hotspot.
 
