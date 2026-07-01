@@ -2,7 +2,7 @@
 // (installed PWAs get better background-audio behaviour than a browser tab).
 // Cache-first for the app shell; audio is user-picked at runtime, never cached here.
 
-const CACHE = 'slipstream-spike-v1';
+const CACHE = 'slipstream-spike-v2';
 const SHELL = [
   './',
   './index.html',

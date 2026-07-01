@@ -81,12 +81,14 @@ have the right to play them. The tool can't verify ownership, so it steers towar
 "everyone brought music they own" pattern — the strongest case, where each participant is a
 lawful source and there's no lost sale.
 
-**Rigorous ephemerality.** Distribution is only a durable-copy problem if the data persists.
-Slipstream leans on the EU Art. 5(1) transient-copy exception (the one that makes streaming
-legal): audio lives in **memory only** (in-memory Blobs / object URLs), is **never written to
-persistent storage**, is **evicted after play**, and is **wiped at ride-end / on app close**.
-Ephemerality doesn't launder an unlawful source — but combined with the ownership gate it
-makes the owned-file sharing clearly *synchronised playback*, not a music locker.
+**Ride-scoped ephemerality.** The more transient the copy, the weaker any durable-copy claim.
+Slipstream keeps audio **bounded to the ride**: files are held in **ride-scoped storage
+(IndexedDB)** so a mid-ride browser reload doesn't drop the queue, are **evicted when removed**,
+and are **wiped when the ride ends** (End & wipe). Nothing persists past the ride. This is a
+deliberate softening of a stricter "memory-only" posture (chosen for reload resilience) — it's
+no longer the pure Art. 5(1) transient-copy case, but combined with the ownership gate it keeps
+the owned-file sharing clearly *ride playback*, not a permanent music locker. Ephemerality never
+launders an unlawful source — which is why **files-not-fetching** stays the load-bearing rule.
 
 Net: **owned files + honor gate + memory-only + wipe-on-end** = the strongest position;
 **app-as-downloader** = out, on purpose.
