@@ -48,9 +48,10 @@ Model: **prefetch files + shared-clock sync + local playback** (NOT live audio s
 - [ ] Shared-clock sync + local player.
 - [ ] Reconnect / snap-to-leader logic.
 - [ ] Collaborative queue — **riders contribute their own owned files** (the killer feature).
-- [ ] Legal link resolver (post-MVP): paste Spotify/Apple link → metadata → match against
-      (files already in the group | licensed free catalogs: FMA/Jamendo/ccMixter/YT Audio
-      Library | optional per-track Premium metadata-sync for riders who have it).
+- [ ] Legal sources + delivery modes (see [`docs/legal-sources.md`](docs/legal-sources.md)):
+      Mode A owned-file peer bytes (built) · Mode B link-and-fetch from licensed catalogs
+      (**Jamendo**, **Internet Archive**) · Mode C per-rider **Spotify Premium** metadata sync
+      (connect flow). Queue items are references; each rider resolves own → catalog → premium.
 - [ ] Hotspot-share mode + Wi-Fi-join QR.
 - [ ] Native shim for true offline hotspot.
 
@@ -90,8 +91,13 @@ no longer the pure Art. 5(1) transient-copy case, but combined with the ownershi
 the owned-file sharing clearly *ride playback*, not a permanent music locker. Ephemerality never
 launders an unlawful source — which is why **files-not-fetching** stays the load-bearing rule.
 
-Net: **owned files + honor gate + memory-only + wipe-on-end** = the strongest position;
+Net: **owned files + honor gate + ride-scoped wipe** = the strongest position;
 **app-as-downloader** = out, on purpose.
+
+**Where music may come from** is defined in [`docs/legal-sources.md`](docs/legal-sources.md):
+a whitelist of permissive/downloadable/redistributable sources, three delivery modes
+(A peer-bytes · B link-and-fetch from licensed catalogs · C per-rider Premium sync), and the
+per-source obligations (attribution, non-commercial scope).
 
 ## Competitive landscape
 
